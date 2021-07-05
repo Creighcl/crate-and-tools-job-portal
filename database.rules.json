@@ -1,0 +1,35 @@
+{
+  "rules": {
+    "billableitems": {
+			".read": "root.child('users').child(auth.uid).val() > 1",
+      "$item_id": {
+				".read": "root.child('users').child(auth.uid).val() > 1",
+        ".write": "root.child('users').child(auth.uid).val() > 2"
+      }
+    },
+    "serviceaccounts": {
+    	".read": "root.child('users').child(auth.uid).val() > 1",
+      "$user_id": {
+        ".read": "(root.child('users').child(auth.uid).val() > 0 && $user_id == auth.uid) || root.child('users').child(auth.uid).val() > 1",
+        ".write": "(root.child('users').child(auth.uid).val() > 0 && $user_id == auth.uid) || root.child('users').child(auth.uid).val() > 2"
+      }
+    },
+    "places": {
+      ".read": "root.child('users').child(auth.uid).val() > 1",
+      "$ownerid": {
+        ".read": "root.child('users').child(auth.uid).val() > 1 || $ownerid == auth.uid",
+        "$placeid": {
+					".read": "root.child('users').child(auth.uid).val() > 1 || $ownerid == auth.uid",
+          ".write": "root.child('users').child(auth.uid).val() > 2"
+        }
+      }
+		},
+    "users": {
+      "$user_id": {
+        ".read": "$user_id == auth.uid",
+        ".write": true,
+        ".validate": "newData.isNumber()"
+      }
+    }
+  }
+}
