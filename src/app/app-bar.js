@@ -70,7 +70,7 @@ const TopAppBar = () => {
                     {({ user: { photoURL, displayName } }) => {
                     return (
                         <React.Fragment>
-                            {
+                            {/* {
                                 accessLevel > 99 && (
                                     <div className={classes.buttonTray}>
                                         <Link className={classes.buttonStyle} to="/accounts">
@@ -84,7 +84,7 @@ const TopAppBar = () => {
                                         </Link>
                                     </div>
                                 )
-                            }
+                            } */}
                         <IconButton style={ { marginLeft: 'auto' } } onClick={toggleMenu} ref={iconRef}><Avatar alt={displayName} src={photoURL} /></IconButton>
                         <Menu
                             id="lock-menu"
