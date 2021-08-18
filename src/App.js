@@ -46,13 +46,15 @@ const App = () => {
   const { currentUser } = firebase.auth();
 
   function getMyAccessLevel() {
-    if (firebase.auth().currentUser !== null && accessLevel === -2) {
+    if (firebase.auth().currentUser !== null) {
       const authLevelLookupRef = firebase.database().ref(`/users/${firebase.auth().currentUser.uid}`);
       authLevelLookupRef.onDisconnect().cancel();
       authLevelLookupRef.on('value', (snapshot) => {
         setHasInited(true);
         if (snapshot.exists()) {
           setAccessLevel(snapshot.val());
+        } else {
+          setAccessLevel(0);
         }
       });
     }

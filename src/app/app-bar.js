@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useContext } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import {
     FirebaseAuthConsumer,
@@ -16,6 +16,7 @@ import MenuItem from '@material-ui/core/MenuItem';
 import Avatar from '@material-ui/core/Avatar';
 import AppBar from '@material-ui/core/AppBar';
 import Toolbar from '@material-ui/core/Toolbar';
+import AppContext from '../app-context';
 
 const useStyles = makeStyles((theme) => ({
     appBar: {
@@ -42,6 +43,7 @@ const TopAppBar = () => {
     const classes = useStyles();
     const [menuOpen, setMenuOpen] = useState(false);
     const iconRef = useRef(null);
+    const { accessLevel } = useContext(AppContext);
 
     function toggleMenu() {
         setMenuOpen(!menuOpen);
@@ -68,17 +70,21 @@ const TopAppBar = () => {
                     {({ user: { photoURL, displayName } }) => {
                     return (
                         <React.Fragment>
-                            <div className={classes.buttonTray}>
-                                <Link className={classes.buttonStyle} to="/accounts">
-                                    Accounts
-                                </Link>
-                                <Link className={classes.buttonStyle} to="/places">
-                                    Places
-                                </Link>
-                                <Link className={classes.buttonStyle} to="/billables">
-                                    Billables
-                                </Link>
-                            </div>
+                            {
+                                accessLevel > 99 && (
+                                    <div className={classes.buttonTray}>
+                                        <Link className={classes.buttonStyle} to="/accounts">
+                                            Accounts
+                                        </Link>
+                                        <Link className={classes.buttonStyle} to="/places">
+                                            Places
+                                        </Link>
+                                        <Link className={classes.buttonStyle} to="/billables">
+                                            Billables
+                                        </Link>
+                                    </div>
+                                )
+                            }
                         <IconButton style={ { marginLeft: 'auto' } } onClick={toggleMenu} ref={iconRef}><Avatar alt={displayName} src={photoURL} /></IconButton>
                         <Menu
                             id="lock-menu"

@@ -76,7 +76,7 @@ const FirebaseCrud = ({ definition }) => {
 
     const { modelType } = crudDefinitions[definition];
 
-    const canAddItems = modelType === ModelTypes.USEROWNEDLIST || ModelTypes.ENUM;
+    const canAddItems = modelType === ModelTypes.USEROWNEDLIST || modelType === ModelTypes.ENUM;
 
     const skipList = accessLevel < 2 && modelType === ModelTypes.SOLO;
 
