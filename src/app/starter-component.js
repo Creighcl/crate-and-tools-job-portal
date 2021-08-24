@@ -42,6 +42,10 @@ const StarterComponent = () => {
         firebase.database().ref(`/open/${pkey}/${ikey}/`).set(null);
     }
 
+    function onNewProjectNameChange({ target: { value }}) {
+        setNewProjectName(value);
+    }
+
     useEffect(() => {
         // get all projects
         if (firebase.auth().currentUser !== null) {
@@ -122,7 +126,7 @@ const StarterComponent = () => {
             <Card style={ { marginTop: 48 } }>
                 <CardContent>
                     <Typography variant="h6">New Project</Typography>
-                    <TextField label="Project Name" variant="outlined" value={ newProjectName } onChange={ ({ target: { value }}) => setNewProjectName(value) } />
+                    <TextField label="Project Name" variant="outlined" value={ newProjectName } onChange={ onNewProjectNameChange } />
                     <Button variant="contained" color="primary" onClick={ createNewProject }>
                         Add New
                     </Button>
