@@ -1,24 +1,24 @@
 import React, { useEffect, useState } from 'react';
-import Accordion from '@material-ui/core/Accordion';
-import AccordionSummary from '@material-ui/core/AccordionSummary';
-import AccordionDetails from '@material-ui/core/AccordionDetails';
-import Typography from '@material-ui/core/Typography';
-import Table from '@material-ui/core/Table';
-import TableHead from '@material-ui/core/TableHead';
-import TableBody from '@material-ui/core/TableBody';
-import TableFooter from '@material-ui/core/TableFooter';
-import TableRow from '@material-ui/core/TableRow';
-import TableCell from '@material-ui/core/TableCell';
-import Button from '@material-ui/core/Button';
-import DeleteForeverRoundedIcon from '@material-ui/icons/DeleteForeverRounded';
-import IconButton from '@material-ui/core/IconButton';
-import Card from '@material-ui/core/Card';
-import CardContent from '@material-ui/core/CardContent';
-import TextField from '@material-ui/core/TextField';
+import Accordion from '@mui/material/Accordion';
+import AccordionSummary from '@mui/material/AccordionSummary';
+import AccordionDetails from '@mui/material/AccordionDetails';
+import Typography from '@mui/material/Typography';
+import Table from '@mui/material/Table';
+import TableHead from '@mui/material/TableHead';
+import TableBody from '@mui/material/TableBody';
+import TableFooter from '@mui/material/TableFooter';
+import TableRow from '@mui/material/TableRow';
+import TableCell from '@mui/material/TableCell';
+import Button from '@mui/material/Button';
+import DeleteForeverRoundedIcon from '@mui/icons-material/DeleteForeverRounded';
+import IconButton from '@mui/material/IconButton';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import TextField from '@mui/material/TextField';
+import { getDatabase, ref, get, set, onValue } from 'firebase/database';
+import { getAuth } from 'firebase/auth';
 import ItemAddForm from './item-add-form';
 
-import firebase from "firebase/app";
-import "firebase/auth";
 import numeral from 'numeral';
 
 const StarterComponent = () => {
@@ -31,7 +31,8 @@ const StarterComponent = () => {
 
     function createNewProject() {
         if (!projects[newProjectName]) {
-            firebase.database().ref(`/open/${newProjectName}/`).set({ '-': '-' });
+            set(ref(getDatabase(), `/open/${newProjectName}/`), { '-': '-' });
+            // firebase.database()..set({ '-': '-' });
         } else {
             alert('already exists');
         }
@@ -39,7 +40,8 @@ const StarterComponent = () => {
     }
 
     function deleteItemForProject(ikey, pkey) {
-        firebase.database().ref(`/open/${pkey}/${ikey}/`).set(null);
+        set(ref(getDatabase(), `/open/${pkey}/${ikey}/`), null);
+        // firebase.database().ref(`/open/${pkey}/${ikey}/`).set(null);
     }
 
     function onNewProjectNameChange({ target: { value }}) {
@@ -48,18 +50,25 @@ const StarterComponent = () => {
 
     useEffect(() => {
         // get all projects
-        if (firebase.auth().currentUser !== null) {
-            const projectsLookup = firebase.database().ref(`/open`);
-            console.log(projectsLookup);
-            projectsLookup.onDisconnect().cancel();
-            projectsLookup.on('value', (snapshot) => {
+        if (getAuth().currentUser !== null) {
+            onValue(ref(getDatabase(), '/open'), (snapshot) => {
                 if (snapshot.exists()) {
                     setProjects(snapshot.val());
                 } else {
                     setProjects([]);
                 }
             });
-            console.log('logged');
+            // const projectsLookup = firebase.database().ref(`/open`);
+            // // console.log(projectsLookup);
+            // projectsLookup.onDisconnect().cancel();
+            // projectsLookup.on('value', (snapshot) => {
+            //     if (snapshot.exists()) {
+            //         setProjects(snapshot.val());
+            //     } else {
+            //         setProjects([]);
+            //     }
+            // });
+            // console.log('logged');
         } else {
             console.log('not logged in');
         }
@@ -71,13 +80,21 @@ const StarterComponent = () => {
             {
                 Object.keys(projects).map((key) => (<Accordion key={ key } style={ { maxWidth: 1000 } }>
                     <AccordionSummary>
-                        <Typography variant="body1">
-                            <b>
-                                { key }
-                            </b>
-                        </Typography>
+                        <div style={ { display: 'flex', justifyContent: 'space-between', width: '100%' } }>
+                            <Typography variant="body1">
+                                <b>
+                                    { key }
+                                </b>
+                            </Typography>
+                            <Typography variant="body2">
+                                { numeral(getTotalForProjectKey(key)).format('$0,0.00') }
+                            </Typography>
+                        </div>
                     </AccordionSummary>
                     <AccordionDetails style={ { flexWrap: 'wrap' } }>
+                        [ ] Name  [Edit]<br />
+                        [ ] Description <br />
+                        [ Save ] <br />
                         <Table>
                             <TableHead>
                                 <TableRow>
@@ -117,6 +134,7 @@ const StarterComponent = () => {
                         <div style={ { flexBasis: '100%', height: 0 } } />
                         <div style={ { marginTop: 48 } }>
                             <ItemAddForm projectKey={ key } />
+                            [ other options]
                         </div>
                     </AccordionDetails>
                     </Accordion>

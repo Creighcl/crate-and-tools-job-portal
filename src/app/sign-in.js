@@ -1,13 +1,12 @@
 import React from 'react';
-import Button from '@material-ui/core/Button';
-import GoogleIcon from '@material-ui/icons/Google';
-import firebase from "firebase/app";
-import "firebase/auth";
+import Button from '@mui/material/Button';
+import GoogleIcon from '@mui/icons-material/Google';
+import { signInWithPopup, GoogleAuthProvider, getAuth } from 'firebase/auth';
 
 const SignIn = () => {
     async function googleSignin() {
-        const googleAuthProvider = new firebase.auth.GoogleAuthProvider();
-        await firebase.auth().signInWithPopup(googleAuthProvider);
+        // const googleAuthProvider = new firebase.auth.GoogleAuthProvider();
+        await signInWithPopup(getAuth(), new GoogleAuthProvider());
     }
 
     return (<div style={ { width: 300, padding: 36, margin: '0 auto' } }>

@@ -1,10 +1,10 @@
 import React, { useState, useContext } from 'react';
-import firebase from "firebase/app";
-import "firebase/auth";
-import Fab from '@material-ui/core/Fab';
-import Typography from '@material-ui/core/Typography';
-import AddIcon from '@material-ui/icons/Add';
-import Breadcrumbs from '@material-ui/core/Breadcrumbs';
+import firebase from "firebase/compat/app";
+import "firebase/compat/auth";
+import Fab from '@mui/material/Fab';
+import Typography from '@mui/material/Typography';
+import AddIcon from '@mui/icons-material/Add';
+import Breadcrumbs from '@mui/material/Breadcrumbs';
 import {
     Switch,
     Link,

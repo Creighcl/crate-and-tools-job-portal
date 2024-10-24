@@ -3,26 +3,25 @@ import React, {
     useState,
     useContext
 } from 'react';
-import Button from '@material-ui/core/Button';
-import Typography from '@material-ui/core/Typography';
-import Card from '@material-ui/core/Card';
-import CardActions from '@material-ui/core/CardActions';
-import CardContent from '@material-ui/core/CardContent';
-import IconButton from '@material-ui/core/IconButton';
-import DeleteIcon from '@material-ui/icons/Delete';
-import Dialog from '@material-ui/core/Dialog';
-import DialogContent from '@material-ui/core/DialogContent';
-import DialogContentText from '@material-ui/core/DialogContentText';
-import DialogTitle from '@material-ui/core/DialogTitle';
-import DialogActions from '@material-ui/core/DialogActions';
+import Button from '@mui/material/Button';
+import Typography from '@mui/material/Typography';
+import Card from '@mui/material/Card';
+import CardActions from '@mui/material/CardActions';
+import CardContent from '@mui/material/CardContent';
+import IconButton from '@mui/material/IconButton';
+import DeleteIcon from '@mui/icons-material/Delete';
+import Dialog from '@mui/material/Dialog';
+import DialogContent from '@mui/material/DialogContent';
+import DialogContentText from '@mui/material/DialogContentText';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogActions from '@mui/material/DialogActions';
 import {
     useParams,
     useHistory,
     useRouteMatch
 } from 'react-router-dom';
-import firebase from "firebase/app";
-import "firebase/auth";
-import "firebase/database";
+import { getAuth } from 'firebase/auth';
+import { get, getDatabase, ref, set, onChildChanged } from 'firebase/database';
 import CrudContext from './crud-context';
 import FormField from './form-field';
 import ModelTypes from './model-types';
@@ -62,7 +61,7 @@ const NewItemQualifierSelection = () => {
 
 const EditItem = () => {
     const hx = useHistory();
-    const { uid } = firebase.auth().currentUser;
+    const { uid } = getAuth().currentUser;
     const match = useRouteMatch('/:routeGroup');
     const [open, setOpen] = useState(false);
     let { cruddyid } = useParams();
@@ -102,8 +101,12 @@ const EditItem = () => {
 
     function deleteItem() {
         handleClose();
-        fbRef.set(null);
-        goBack();
+        set(
+            ref(getDatabase(), fbRef),
+            null
+        ).then(() => {
+            goBack();
+        });
         // toast the delete
     }
 
@@ -114,18 +117,31 @@ const EditItem = () => {
         };
         setCrumbs([{ url: match.url, label: `${crudLabel}s` }, { url: '', label: 'This Item' }]);
         
-        const refPath = `/${storageKey}/${cruddyIdForUri}`;
-        let newRef = firebase.database().ref(refPath);
-        newRef.onDisconnect().cancel();
-        newRef.on('child_changed', (snapshot) => {
-           console.log('something changed externally');
-           // toast external change
+        onChildChanged(
+            ref(getDatabase(), `/${storageKey}/${cruddyIdForUri}`),
+            (snapshot) => {
+                console.log('something changed externally');
+            }
+        )
+        const newRef = `/${storageKey}/${cruddyIdForUri}`;
+        get(ref(getDatabase(), newRef)).then((snapshot) => {
+            setUserHasAccess(true);
+            importNewItemInfo(snapshot.val() || {});
+        }).catch(() => {
+            setUserHasAccess(false);
         });
-        newRef.once('value')
-            .then((snapshot) => { setUserHasAccess(true); importNewItemInfo(snapshot.val() || {}); })
-            .catch(() => { setUserHasAccess(false); });
         setFbRef(newRef);
-        return () => newRef.off();
+        // const refPath = `/${storageKey}/${cruddyIdForUri}`;
+        // let newRef = firebase.database().ref(refPath);
+        // newRef.onDisconnect().cancel();
+        // newRef.on('child_changed', (snapshot) => {
+        //    console.log('something changed externally');
+        //    // toast external change
+        // });
+        // newRef.once('value')
+        //     .then((snapshot) => { setUserHasAccess(true); importNewItemInfo(snapshot.val() || {}); })
+        //     .catch(() => { setUserHasAccess(false); });
+        // return () => newRef.off();
     }, [storageKey, cruddyid, accessLevel, uid]); // eslint-disable-line
 
     function resetForm() {
@@ -144,7 +160,7 @@ const EditItem = () => {
     }
 
     function onSaveResponse(resp) {
-        if (resp === null) {
+        if (resp === undefined) {
             onSuccessfulSave();
         } else {
             onFailedSave(resp);
@@ -152,14 +168,15 @@ const EditItem = () => {
     }
 
     function saveItem() {
-        fbRef.set(formState, onSaveResponse);
+        set(ref(getDatabase(), fbRef), formState)
+            .then(onSaveResponse);
     }
 
     if (!userHasAccess) {
         return (<div>You are not authorized to access this item</div>);
     }
 
-    if (!entityState || entityState === {}){
+    if (!entityState || entityState == {}){
         return (<div>LOADING</div>);
     }
 

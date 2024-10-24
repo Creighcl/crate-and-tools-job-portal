@@ -1,9 +1,17 @@
 {
   "rules": {
-      "open": {
-        ".read": "root.child('users').child(auth.uid).val() > 1",
-        ".write": "root.child('users').child(auth.uid).val() > 2"
-      },
+    "open": {
+      ".read": "root.child('users').child(auth.uid).val() > 1",
+      ".write": "root.child('users').child(auth.uid).val() > 2"
+    },
+    "features": {
+      ".read": "root.child('users').child(auth.uid).val() > 1",
+      ".write": "root.child('users').child(auth.uid).val() > 2"
+    },
+    "featuresizes": {
+      ".read": "root.child('users').child(auth.uid).val() > 1",
+      ".write": "root.child('users').child(auth.uid).val() > 2"
+    },
     "billableitems": {
 			".read": "root.child('users').child(auth.uid).val() > 1",
       "$item_id": {

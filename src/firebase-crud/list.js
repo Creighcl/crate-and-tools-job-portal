@@ -7,18 +7,18 @@ import {
     Link,
     useRouteMatch
 } from 'react-router-dom';
-import Table from '@material-ui/core/Table';
-import TableHead from '@material-ui/core/TableHead';
-import TableBody from '@material-ui/core/TableBody';
-import TableCell from '@material-ui/core/TableCell';
-import TableRow from '@material-ui/core/TableRow';
-import EditIcon from '@material-ui/icons/Edit';
-import Typography from '@material-ui/core/Typography';
-import Card from '@material-ui/core/Card';
-import CardContent from '@material-ui/core/CardContent';
-import firebase from "firebase/app";
-import "firebase/auth";
-import "firebase/database";
+import Table from '@mui/material/Table';
+import TableHead from '@mui/material/TableHead';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableRow from '@mui/material/TableRow';
+import EditIcon from '@mui/icons-material/Edit';
+import Typography from '@mui/material/Typography';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import { getAuth } from 'firebase/auth';
+import { getDatabase, ref, onChildChanged, get } from 'firebase/database';
+
 import CrudContext from './crud-context';
 import AppContext from '../app-context';
 import ModelTypes from './model-types';
@@ -58,7 +58,7 @@ const List = () => {
     }
 
     let editLinkFn = (id) => `${match.path}/${id}`;
-    const { uid } = firebase.auth().currentUser;
+    const { uid } = getAuth().currentUser;
     const mayAccessTopLevelList = accessLevel >= 2;
     
     if (mayAccessTopLevelList && modelType === ModelTypes.USEROWNEDLIST) {
@@ -86,14 +86,11 @@ const List = () => {
     }
 
     useEffect(() => {
-        setCrumbs([{ url: '', label: `${crudLabel}s` }])
-        let newRef = firebase.database().ref(dbRef);
-        newRef.onDisconnect().cancel();
-        newRef.on('child_changed', (snapshot) => {
-           setListState(snapshotReducer(snapshot));
-           // toast external change
+        setCrumbs([{ url: '', label: `${crudLabel}s` }]);
+        onChildChanged(ref(getDatabase(), dbRef), (snapshot) => {
+            setListState(snapshotReducer(snapshot));
         });
-        newRef.once('value')
+        get(ref(getDatabase(), dbRef))
             .then((snapshot) => {
                 setUserHasAccess(true);
                 setListState(snapshotReducer(snapshot));
@@ -102,7 +99,22 @@ const List = () => {
                 console.log(e);
                 setUserHasAccess(false);
             });
-        return () => newRef.off();
+        // let newRef = firebase.database().ref(dbRef);
+        // newRef.onDisconnect().cancel();
+        // newRef.on('child_changed', (snapshot) => {
+        //    setListState(snapshotReducer(snapshot));
+        //    // toast external change
+        // });
+        // newRef.once('value')
+        //     .then((snapshot) => {
+        //         setUserHasAccess(true);
+        //         setListState(snapshotReducer(snapshot));
+        //     })
+        //     .catch((e) => {
+        //         console.log(e);
+        //         setUserHasAccess(false);
+        //     });
+        // return () => newRef.off();
     }, [storageKey, crudLabel, setCrumbs, accessLevel]);
 
     if (!userHasAccess) return (<div>NO ACCESS</div>);

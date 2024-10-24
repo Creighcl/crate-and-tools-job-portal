@@ -1,22 +1,17 @@
 import React, { useState, useRef, useContext } from 'react';
-import { makeStyles } from '@material-ui/core/styles';
+import { makeStyles } from '@mui/styles';
 import {
-    FirebaseAuthConsumer,
-    IfFirebaseAuthed
-  } from "@react-firebase/auth";
-import firebase from "firebase/app";
-import "firebase/auth";
-  import {
     Link
-  } from "react-router-dom";
-import IconButton from '@material-ui/core/IconButton';
-import Menu from '@material-ui/core/Menu';
-import MenuItem from '@material-ui/core/MenuItem';
-
-import Avatar from '@material-ui/core/Avatar';
-import AppBar from '@material-ui/core/AppBar';
-import Toolbar from '@material-ui/core/Toolbar';
+} from "react-router-dom";
+import IconButton from '@mui/material/IconButton';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
+import { getAuth, signOut } from 'firebase/auth';
+import Avatar from '@mui/material/Avatar';
+import AppBar from '@mui/material/AppBar';
+import Toolbar from '@mui/material/Toolbar';
 import AppContext from '../app-context';
+import CrudDefs from '../firebase-crud/crud-defs';
 
 const useStyles = makeStyles((theme) => ({
     appBar: {
@@ -50,7 +45,7 @@ const TopAppBar = () => {
     }
 
     async function googleSignout() {
-        await firebase.auth().signOut();
+        await signOut(getAuth());
         setMenuOpen(false);
     }
 
@@ -58,60 +53,50 @@ const TopAppBar = () => {
         setMenuOpen(false)
     };
 
-    return (<AppBar className={classes.appBar} position="fixed">
+    const { displayName, photoURL } = getAuth().currentUser;
+
+    if (!getAuth().currentUser) return null;
+
+    return (<AppBar color="mono" className={classes.appBar} position="fixed">
     <Toolbar style={ { maxWidth: 1600, width: '100%', margin: '0 auto', padding: 0 } }>
         <div style={ { padding: '0 6px', display: 'flex', width: '100%' } }>
             <Link to="/">
                 <img style={ { height: 70, width: 204, marginTop: 6 } } src="/logo2.png" />
             </Link>
-            <IfFirebaseAuthed>
-                { () => (
-                <FirebaseAuthConsumer>
-                    {({ user: { photoURL, displayName } }) => {
-                    return (
-                        <React.Fragment>
-                            {/* {
-                                accessLevel > 99 && (
-                                    <div className={classes.buttonTray}>
-                                        <Link className={classes.buttonStyle} to="/accounts">
-                                            Accounts
-                                        </Link>
-                                        <Link className={classes.buttonStyle} to="/places">
-                                            Places
-                                        </Link>
-                                        <Link className={classes.buttonStyle} to="/billables">
-                                            Billables
-                                        </Link>
-                                    </div>
-                                )
-                            } */}
-                        <IconButton style={ { marginLeft: 'auto' } } onClick={toggleMenu} ref={iconRef}><Avatar alt={displayName} src={photoURL} /></IconButton>
-                        <Menu
-                            id="lock-menu"
-                            anchorEl={iconRef.current}
-                            keepMounted
-                            open={menuOpen}
-                            onClose={handleClose}
-                        >
-                            <div style={{ fontSize: 11, padding: 4 }}>
-                            Logged in as
-                            <div style={{ fontWeight: 'bold', borderBottom: '2px solid #545454', marginBottom: 12, paddingBottom: 12 }}>
-                                {displayName}
-                            </div>
-                            </div>
-                            <MenuItem
-                            key="abc"
-                            onClick={googleSignout}
-                            >
-                            Logout
-                            </MenuItem>
-                        </Menu>
-                        </React.Fragment>
-                    );
-                    }}
-                </FirebaseAuthConsumer>
-                )}
-            </IfFirebaseAuthed>
+            {
+                accessLevel >= 4 && (
+                    <div className={classes.buttonTray}>
+                        {
+                            Object.keys(CrudDefs).map((key) => (
+                                <Link key={key} className={classes.buttonStyle} to={`/${key.toLowerCase()}`}>
+                                    {CrudDefs[key].crudLabel}
+                                </Link>
+                            ))
+                        }
+                    </div>
+                )
+            }
+            <IconButton style={ { marginLeft: 'auto' } } onClick={toggleMenu} ref={iconRef}><Avatar alt={displayName} src={photoURL} /></IconButton>
+            <Menu
+                id="lock-menu"
+                anchorEl={iconRef.current}
+                keepMounted
+                open={menuOpen}
+                onClose={handleClose}
+            >
+                <div style={{ fontSize: 11, padding: 4 }}>
+                Logged in as
+                <div style={{ fontWeight: 'bold', borderBottom: '2px solid #545454', marginBottom: 12, paddingBottom: 12 }}>
+                    {displayName}
+                </div>
+                </div>
+                <MenuItem
+                key="abc"
+                onClick={googleSignout}
+                >
+                Logout
+                </MenuItem>
+            </Menu>
         </div>
     </Toolbar>
   </AppBar>);

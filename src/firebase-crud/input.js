@@ -1,11 +1,10 @@
 import React, { useContext, useEffect, useState } from 'react';
-import TextField from '@material-ui/core/TextField';
-import Select from '@material-ui/core/Select';
-import FormControl from '@material-ui/core/FormControl';
-import InputLabel from '@material-ui/core/InputLabel';
-import { MenuItem } from '@material-ui/core';
-import firebase from "firebase/app";
-import "firebase/database";
+import TextField from '@mui/material/TextField';
+import Select from '@mui/material/Select';
+import FormControl from '@mui/material/FormControl';
+import InputLabel from '@mui/material/InputLabel';
+import { MenuItem } from '@mui/material';
+import { getDatabase, ref, get } from 'firebase/database';
 import CrudContext from './crud-context';
 import AppContext from '../app-context';
 
@@ -28,9 +27,8 @@ export const ILookup = ({ fieldInfo }) => {
     const [options, setOptions] = useState([]);
 
     useEffect(() => {
-        let newRef = firebase.database().ref(`/${lookupKey}`);
-        newRef.onDisconnect().cancel();
-        newRef.once('value')
+        // not watching? should, though.
+        get(ref(getDatabase(), `/${lookupKey}`))
             .then((snapshot) => {
                 const payload = snapshot.val();
                 const itemKeys = Object.keys(payload);
@@ -48,8 +46,29 @@ export const ILookup = ({ fieldInfo }) => {
             })
             .catch(() => {
                 setHasAccess(false);
-             });
-        return () => newRef.off();
+            });
+        // let newRef = firebase.database().ref(`/${lookupKey}`);
+        // newRef.onDisconnect().cancel();
+        // newRef.once('value')
+        //     .then((snapshot) => {
+        //         const payload = snapshot.val();
+        //         const itemKeys = Object.keys(payload);
+        //         const items = itemKeys.map((i) => ({
+        //             id: i,
+        //             ...payload[i]
+        //         }));
+                
+        //         const newOptions = items.map((i) => ({
+        //             key: lookupItemKeyFn(i),
+        //             value: lookupItemValueFn(i)
+        //         }));
+        //         setOptions(newOptions);
+        //         setHasAccess(true);
+        //     })
+        //     .catch(() => {
+        //         setHasAccess(false);
+        //      });
+        // return () => newRef.off();
     }, [lookupKey, lookupItemKeyFn, lookupItemValueFn, accessLevel]);
 
     function updateState({ target }) {

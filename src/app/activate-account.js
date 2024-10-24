@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import Typography from '@material-ui/core/Typography';
-import Button from '@material-ui/core/Button';
+import Typography from '@mui/material/Typography';
+import Button from '@mui/material/Button';
 
 const ActivateAccount = () => {
 

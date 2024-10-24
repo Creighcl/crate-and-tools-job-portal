@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { makeStyles } from '@material-ui/core/styles';
-import firebase from "firebase/app";
-import "firebase/auth";
-import {
-  IfFirebaseAuthed,
-  IfFirebaseUnAuthed
-} from "@react-firebase/auth";
+import { makeStyles } from '@mui/styles';
+import { initializeApp } from 'firebase/app';
+import { onAuthStateChanged, getAuth } from 'firebase/auth';
+import { getDatabase, ref, get } from 'firebase/database';
+import CircularProgress from '@mui/material/CircularProgress';
 import AppContext from './app-context';
 import AuthenticatedRoot from './app/pathing/authed-root';
 import AppBar from './app/app-bar';
@@ -39,38 +37,44 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
+let firebaseApp;
+
+const config = {
+  apiKey: "AIzaSyBsoQXeqeUqNsFzggQYheaYFFmPdFRjPgQ",
+  authDomain: "c-a-t-job-portal.firebaseapp.com",
+  databaseURL: "https://c-a-t-job-portal-default-rtdb.firebaseio.com",
+  projectId: "c-a-t-job-portal",
+  storageBucket: "c-a-t-job-portal.appspot.com",
+  messagingSenderId: "390538795524",
+  appId: "1:390538795524:web:7b3fdb4112d97d4a8db351",
+  measurementId: "G-VXNCVBRN5Z"
+};
+
 const App = () => {
   const [accessLevel, setAccessLevel] = useState(-2);
-  const [hasInited, setHasInited] = useState(false);
   const classes = useStyles();
-  const { currentUser } = firebase.auth();
 
-  function getMyAccessLevel() {
-    if (firebase.auth().currentUser !== null) {
-      const authLevelLookupRef = firebase.database().ref(`/users/${firebase.auth().currentUser.uid}`);
-      authLevelLookupRef.onDisconnect().cancel();
-      authLevelLookupRef.on('value', (snapshot) => {
-        setHasInited(true);
+  function registerUserAccessLevel(user) {
+    if (user === null) { 
+      setAccessLevel(0);
+      return; 
+    }
+
+    get(ref(getDatabase(), `/users/${user.uid}`))
+      .then((snapshot) => {
         if (snapshot.exists()) {
           setAccessLevel(snapshot.val());
         } else {
           setAccessLevel(0);
         }
       });
-    }
   }
 
   useEffect(() => {
-    getMyAccessLevel();
-  }, [currentUser]);
+    firebaseApp = initializeApp(config);
 
-
-  useEffect(() => {
-    setTimeout(() => {
-      if (!hasInited) {
-        setHasInited(true);
-      }
-    }, 2000);
+    onAuthStateChanged(getAuth(), (user) => { registerUserAccessLevel(user); });
+// need to unsubscribe too 
   }, []);
 
   const appContextValue = {
@@ -80,26 +84,18 @@ const App = () => {
 
   return (
     <div className={classes.rootContainer}>
-      { hasInited ? (
         <AppContext.Provider value={ appContextValue }>
-          <IfFirebaseAuthed>
-              { () => (
-                <React.Fragment>
-                  <AppBar />
-                  <main className={classes.content}>
-                    <AuthenticatedRoot />
-                  </main>
-                </React.Fragment>
-              )}
-          </IfFirebaseAuthed>
-          <IfFirebaseUnAuthed>
-              { () => {
-                return (<SignInBox />)
-              }}
-          </IfFirebaseUnAuthed>
-        </AppContext.Provider>
-      ) : (<WaitWindow />)
-      }
+            { firebaseApp && getAuth().currentUser && (
+              <React.Fragment>
+                <AppBar />
+                
+                <main className={classes.content}>
+                  <AuthenticatedRoot />
+                </main>
+              </React.Fragment>
+            )}
+            { (!firebaseApp || !getAuth().currentUser) && (<SignInBox />) }
+      </AppContext.Provider>
     </div>);
 };
 
